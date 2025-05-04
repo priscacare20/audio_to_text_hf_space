@@ -57,6 +57,7 @@ LLaMA model loads with 4-bit quantization to reduce memory and improve performan
  2. Support for multi-language transcription
  3. Save history of generated minutes
  4. Provide summary in audio
+ 5. download summary in pdf
 
 ## 🤝 Contributing
 Contributions welcome! Open an issue or submit a pull request for improvements or new features.
