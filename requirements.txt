@@ -1,0 +1,8 @@
+transformers
+gradio
+openai-whisper
+bitsandbytes
+torch
+gdown
+requests
+soundfile
