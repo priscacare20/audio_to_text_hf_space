@@ -2,8 +2,8 @@
 Transcribe audio and generate structured summary using Hugging Face models.
 This app supports audio file uploads and Google Drive audio links, and produces clean, markdown-formatted meeting notes powered by Whisper and LLaMA models.
 Application includes summarizing podcast, audiobooks and meetings. This will enable geting quick information and determine if its worth listening to the entire audio.
-<!-- Optional: add a screenshot or GIF of the interface -->
 
+![img.png](img.png)
 ## Features
 ✅ Upload audio files (.mp3, .wav, .flac) or provide Google Drive links
 
