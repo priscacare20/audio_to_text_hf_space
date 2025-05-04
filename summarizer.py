@@ -76,7 +76,7 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     )
     user_message = (
         f"{user_prompt}"
-        f"Here is the discussion transcript {transcription}. Please provide highlights including"
+        f"Here is the discussion transcript {transcription}. Please provide highlights "
          "including summary, key discussion points, takeaways and action items in markdown"
     )
 
@@ -109,5 +109,9 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     outputs = model.generate(inputs, max_new_tokens=2000, streamer=streamer)
 
     # Decode and return result
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    decoded_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    # Extract only the assistant's reply
+    response = decoded_output.split(user_prompt)[-1].strip()
+
     return response
