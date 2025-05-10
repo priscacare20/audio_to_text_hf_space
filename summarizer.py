@@ -9,7 +9,7 @@ from utils import download_audio, is_valid_audio
 
 #  allows hugging face to use your token in the space where this app will be deployed.
 #  where 'HF_TOKEN' is the variable name for the token (secret)
-login(token=os.environ["HF_TOKEN"])
+#login(token=os.environ["HF_TOKEN"])
 
 def transcribe(audio_file=None, audio_url=""):
     """
@@ -51,7 +51,7 @@ def transcribe(audio_file=None, audio_url=""):
             tokenizer=processor.tokenizer,
             feature_extractor=processor.feature_extractor,
             torch_dtype=torch.float16,
-            device='cuda')
+            device='cuda')  # use GPU comment when running on CPU only like hf spaces
 
         # return_timestamps = True, is used when the audio is longer than 3000 mel, language =en is used to translate the transcripttion to English
         result = pipe(file_path, return_timestamps=True)
@@ -103,7 +103,7 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     tokenizer.pad_token = tokenizer.eos_token
 
     # Tokenize prompts and generate output
-    inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to("cuda")
+    inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to("cuda") # remove to("cuda") when running on cpu only like hf spaces
     streamer = TextStreamer(tokenizer)
     model = AutoModelForCausalLM.from_pretrained(
         llama,
