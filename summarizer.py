@@ -7,6 +7,10 @@ from huggingface_hub import login
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, BitsAndBytesConfig, AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from utils import download_audio, is_valid_audio
 
+#  allows hugging face to use your token in the space where this app will be deployed.
+#  where 'HF_TOKEN' is the variable name for the token (secret)
+login(token=os.environ["HF_TOKEN"])
+
 def transcribe(audio_file=None, audio_url=""):
     """
     Transcribes spoken audio from either an uploaded file or a URL using the Whisper model.
