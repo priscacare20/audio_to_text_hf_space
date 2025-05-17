@@ -4,7 +4,7 @@ import torch
 from IPython.display import Markdown, display, update_display
 from google.colab import drive
 from huggingface_hub import login
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, BitsAndBytesConfig, AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from utils import download_audio, is_valid_audio
 
 #  allows hugging face to use your token in the space where this app will be deployed.
@@ -80,8 +80,8 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     )
     user_message = (
         f"{user_prompt}"
-        f"Here is the discussion transcript {transcription}. Please provide highlights "
-         "including summary, key discussion points, takeaways and action items in markdown"
+        f"Here is the discussion transcript {transcription}."
+         "if a user_prompt is provided, follow the prompt otherwise, Please provide highlights including summary, key discussion points, takeaways and action items in markdown from the transcript"
     )
 
     messages = [
