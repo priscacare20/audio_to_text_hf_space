@@ -2,8 +2,7 @@ transformers==4.51.3
 sentencepiece==0.2.0
 gradio==5.29.0
 openai==1.76.2
-bitsandbytes==0.45.5
-torch @ https://download.pytorch.org/whl/cu124/torch-2.6.0%2Bcu124-cp311-cp311-linux_x86_64.whl
+torch
 gdown==5.2.0
 requests==2.32.3
 soundfile==0.13.1
