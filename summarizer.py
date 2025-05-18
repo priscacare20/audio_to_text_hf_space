@@ -7,6 +7,9 @@ from huggingface_hub import login
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer, AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 from utils import download_audio, is_valid_audio
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch_dtype = torch.float16 if device.type == "cuda" else torch.float32
+
 #  allows hugging face to use your token in the space where this app will be deployed.
 #  where 'HF_TOKEN' is the variable name for the token (secret)
 #login(token=os.environ["HF_TOKEN"])
@@ -22,7 +25,7 @@ def transcribe(audio_file=None, audio_url=""):
     Returns:
         str: Transcribed text or error message.
     """
-    # file_path = None
+    #file_path = None
     try:
         if audio_file is not None:
             file_path = audio_file
@@ -34,24 +37,23 @@ def transcribe(audio_file=None, audio_url=""):
             return "Please upload a file or enter an audio URL."
 
         if not is_valid_audio(file_path):
-            return "The audio file is invalid or not supported. Try uploading a different file."
+          return "The audio file is invalid or not supported. Try uploading a different file."
 
         # Specifies the pre-trained Whisper Medium model hosted on Hugging Face. This model is capable of converting speech into text.
         audio_model = "openai/whisper-medium"
-        speech_model = AutoModelForSpeechSeq2Seq.from_pretrained(audio_model, torch_dtype=torch.float16,
-                                                                 low_cpu_mem_usage=True, use_safetensors=True)
-        speech_model.to('cuda')  # move the model to GPU
+        speech_model = AutoModelForSpeechSeq2Seq.from_pretrained(audio_model, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True)
+        speech_model.to(device) #  move the model to GPU
 
         # process the audio using autoprocessor. This uses feature extractor to extract the text and a tokenizer to process the text into a format useful to the model
         processor = AutoProcessor.from_pretrained(audio_model)
 
         pipe = pipeline(
-            "automatic-speech-recognition",
-            model=speech_model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
-            torch_dtype=torch.float16,
-            device='cuda')  # use GPU comment when running on CPU only like hf spaces
+        "automatic-speech-recognition",
+        model=speech_model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        torch_dtype=torch_dtype,
+        device=device)
 
         # return_timestamps = True, is used when the audio is longer than 3000 mel, language =en is used to translate the transcripttion to English
         result = pipe(file_path, return_timestamps=True)
@@ -63,6 +65,7 @@ def transcribe(audio_file=None, audio_url=""):
     except Exception as e:
         return f"Transcription error: {str(e)}"
 
+
 def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     """
     Generates structured discussion summary in Markdown format from a transcript using a quantized LLaMA model.
@@ -73,17 +76,19 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     Returns:
         str: Markdown-formatted summary.
     """
+    if not user_prompt:
+        user_prompt = "Please provide highlights including summary, key discussion points, takeaways and action items in markdown from the transcript"
+
     # Prompt configuration for LLM
     system_message = (
         "You are an assistant that produces highlights of a discussion from transcripts, "
-        "with summary, key discussion points, takeaways and action items with owners, in markdown."
+        "with summary, key discussion points, takeaways and action items with owners, in markdown. "
     )
     user_message = (
-        f"{user_prompt}"
-        f"Here is the discussion transcript {transcription}."
-         "if a user_prompt is provided, follow the prompt otherwise, Please provide highlights including summary, key discussion points, takeaways and action items in markdown from the transcript"
-    )
+        f"{user_prompt}\n"
+        f"Here is the discussion transcript: {transcription} "
 
+    )
     messages = [
         {"role": "system", "content": system_message},
         {"role": "user", "content": user_message}
@@ -103,19 +108,21 @@ def generate_summary_from_transcript(transcription: str, user_prompt) -> str:
     tokenizer.pad_token = tokenizer.eos_token
 
     # Tokenize prompts and generate output
-    inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to("cuda") # remove to("cuda") when running on cpu only like hf spaces
+    inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to(device)
     streamer = TextStreamer(tokenizer)
     model = AutoModelForCausalLM.from_pretrained(
         llama,
         device_map="auto",
-        quantization_config=quant_config
+        # quantization_config=quant_config,
+
     )
     outputs = model.generate(inputs, max_new_tokens=2000, streamer=streamer)
 
     # Decode and return result
     decoded_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    print(decoded_output)
 
-    # Extract only the assistant's reply
+    # # Extract only the assistant's reply
     response = decoded_output.split(user_prompt)[-1].strip()
 
     return response
